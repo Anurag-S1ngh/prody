@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  email      String   @unique
+  username   String   @unique
+  rollNumber String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  teams   TeamMember[]
+  abhedya AbhedyaUser?
+}
+
+model Team {
+  id        String   @id @default(uuid()) @db.Uuid
+  teamName  String   @unique
+  teamCode  String   @unique
+  createdAt DateTime @default(now())
+
+  members TeamMember[]
+  events  EventTeam[]
+}
+
+model TeamMember {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  teamId String @db.Uuid
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+}
+
+model Event {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventName   String
+  description String
+  maxTeamSize Int      @default(4)
+  createdAt   DateTime @default(now())
+
+  teams EventTeam[]
+}
+
+model EventTeam {
+  id      String @id @default(uuid()) @db.Uuid
+  eventId String @db.Uuid
+  teamId  String @db.Uuid
+
+  event Event @relation(fields: [eventId], references: [id])
+  team  Team  @relation(fields: [teamId], references: [id])
+
+  @@unique([eventId, teamId])
+}
+
+model AbhedyaUser {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @unique @db.Uuid
+  currentQuestion Int       @default(1)
+  lastAttemptedAt DateTime?
+  prodyPoints     Int       @default(0)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Question {
+  id             String   @id @default(uuid()) @db.Uuid
+  questionNumber Int
+  question       String
+  imgSrc         String?
+  answer         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
